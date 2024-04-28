@@ -1,0 +1,299 @@
+DOCTYPE html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Omas Jugendwort Übersetzer</title>
+    <meta
+      name="description"
+      content="Just a pure semantic HTML markup, without .classes.  Built with Pico CSS."
+    />
+    <link rel="shortcut icon" href="https://picocss.com/favicon.ico" />
+
+    <!-- Pico.css (Classless version) -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.classless.min.css"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jersey+10&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jersey+25&display=swap">
+
+
+  </head>
+  <body>
+    <!-- Header -->
+
+    <header>
+      <hgroup>
+        <img src="photos/Jugendwort2.PNG" alt="Bild" />
+        <div id="text1">
+          <br /><br />
+          <p>
+            Hörst du auch manchmal deinem Enkel zu und fragst dich; <br />
+            <td><em>was versucht er gerade mit mir zu kommunizieren?</em></td>
+            <br />
+            dann bist du Hier genau richtig!
+            <br>
+            Wir helfen dir dabei, die Ausdrücke deines Lieblings zu entschlüsseln!
+          </p>
+        </div>
+      </hgroup>
+      <div class="bothbuttons">
+      <button class="output-button" onclick="startRecording()" onmouseup="stopRecording()">
+        Klick Hier <br>um die Aufnahme zu Beginnen
+      </button>
+    </div>   
+    <div id="output">Teachable Machine Ergebnis wird hier angezeigt</div>
+
+    </header>
+
+    <!-- Div, um das Ergebnis anzuzeigen -->
+    <div></div>
+    <!-- https://p5js.org -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.9.0/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.9.0/addons/p5.dom.min.js"></script>
+    <!-- https://ml5js.org -->
+    <script src="https://unpkg.com/ml5@latest/dist/ml5.min.js"></script>
+    <div id="wordList"></div> <!-- Schriftfeld, das die Begriffe auflistet -->
+    <img id="impressum-image" src="photos/Impressum.png" alt="">
+
+  <!-- Andere HTML-Inhalte ... -->
+
+  <script type="text/javascript">
+    const wordList = document.getElementById("wordList");
+    const uniqueWords = new Set(); // Set zum Speichern der einzigartigen Wörter
+
+    // Funktion zum Aktualisieren des Schriftfeldes mit neuen Begriffen
+    function updateWordList(word) {
+      if (!uniqueWords.has(word)) { // Prüfen, ob das Wort bereits in der Liste vorhanden ist
+        const listItem = document.createElement("p");
+        listItem.textContent = word;
+        wordList.appendChild(listItem);
+        uniqueWords.add(word); // Wort zum Set hinzufügen, um Duplikate zu vermeiden
+      }
+    }
+
+    // Funktion zum Anzeigen der Ergebnisse
+    function gotResult(error, results) {
+      if (error) {
+        console.error(error);
+        return;
+      }
+
+      // Ergebnisse überprüfen und nur anzeigen, wenn die Wahrscheinlichkeit über 90% liegt
+      if (results[0].confidence > 0.9) {
+        const translation = getTranslation(results[0].label);
+        updateWordList(translation); // Ergebnis zur Liste der angezeigten Wörter hinzufügen
+      }
+    }
+
+
+
+  </script>
+    <script type="text/javascript">
+      // Global variable to store the classifier
+
+      // Label
+      let label = "listening...";
+
+      // Teachable Machine model URL:
+      let soundModel =
+        "https://teachablemachine.withgoogle.com/models/VnelyYjK0/";
+      function classifySound() {
+        // Lade das Modell
+        classifier = ml5.soundClassifier(
+          soundModel + "model.json",
+          modelLoaded
+        );
+      }
+
+      function startRecording() {
+        // Load the model
+        classifier = ml5.soundClassifier(
+          soundModel + "model.json",
+          modelLoaded
+        );
+      }
+      function stopRecording() {
+  // Stoppe die Klassifizierung (Aufnahme)
+  classifier.stop();
+}
+
+
+      // Funktion, die aufgerufen wird, wenn das Modell geladen ist
+      function modelLoaded() {
+        console.log("Model geladen!");
+        // Starte die Klassifizierung
+        classifier.classify(gotResult);
+      }
+
+      // Funktion, die aufgerufen wird, wenn das Ergebnis erhalten wurde
+      function gotResult(error, results) {
+        if (error) {
+          console.error(error);
+          return;
+        }
+        // Zeige das Ergebnis im 'output'-Div an
+        document.getElementById("output").innerText = results[0].label;
+      }
+
+      function preload() {
+        // Load the model
+        classifier = ml5.soundClassifier(soundModel + "model.json");
+      }
+      
+
+      function setup() {
+    
+        // Start classifying
+        // The sound model will continuously listen to the microphone
+        classifier.classify(gotResult);
+        noCanvas();
+      }
+
+      function draw() {
+      }
+
+      // The model recognizing a sound will trigger this event
+      function gotResult(error, results) {
+        if (error) {
+          console.error(error);
+          return;
+        }
+
+        // The results are in an array ordered by confidence.
+        
+        const outputDiv = document.querySelector("div#output");
+        const wordList = document.querySelector("div#wordList");
+        if(outputDiv !== null){
+            console.log(results[0].label);
+            let text = '';
+
+            // switch(results[0].label){
+            //     case '"Bro" - Kumpel ':
+            //         text = '"Bro" - Bruder';
+            //     break;
+            //     case 'safe':
+            //         text = '"safe" - sicher';
+            //     break;
+            //     case 'cringe':
+            //         text = '"cringe" - Fremdscham';
+            //     break;
+            //     case 'Diggah':
+            //         text = '"Diggah" - Freund';
+            //     break;
+
+            //     default:
+            //         text = "recording...";
+            //     break;
+
+            // }
+            switch(results[0].label){
+                case 'Bro':
+                    text = '"Bro" - Bruder';
+                break;
+                case 'safe':
+                    text = '"safe" - sicher';
+                break;
+                case 'cringe':
+                    text = '"cringe" - Fremdscham';
+                break;
+                case 'Diggah':
+                    text = '"Diggah" - Freund';
+                break;
+
+                default:
+                    text = "recording...";
+                break;
+
+            }
+            outputDiv.innerText = text;
+
+            if(text !== "recording..."){
+
+                const word = document.createElement("p")
+                word.innerText = text;
+                wordList.appendChild(word);
+            }
+
+        }else{
+            console.error("could not find div#output");
+        }
+        
+      }
+    </script>
+        <style>
+            /* CSS für den Button */
+            .output-button {
+              display: inline-block;
+              background-color: #fcacbc ; /* Hintergrundfarbe */
+              color: white; /* Textfarbe */
+              padding: px ; /* Innenabstand */
+              border-radius: 15px; /* Abrundung der Ecken */
+              border: none; /* Kein Rahmen */
+              text-align: center; /* Text zentriert */
+              text-decoration: none; /* Keine Unterstreichung */
+              cursor: pointer; /* Zeiger Cursor */
+              transition: background-color 0.3s; /* Übergangseffekt für die Hintergrundfarbe */
+              margin: 15px;
+              font-size: 16px;
+              display: inline-block;
+              width: 30%;
+            }
+      
+            .output-button:hover {
+              background-color: #fbbdca; /* Hintergrundfarbe bei Hover */
+            }
+      
+            /* CSS für das Output-Feld */
+            #output {
+              background-color: #fdfdfd; /* Hintergrundfarbe */
+              /* padding: 20px; Innenabstand */
+              border-radius: 15px; /* Abrundung der Ecken */
+              font-size: 16px; /* Schriftgröße */
+              text-align: center; /* Text zentriert */
+              color: rgb(21, 16, 16);
+              size: 50px;
+              margin-left: 30%;
+              margin-right: 10%;
+              padding: 30px;
+              display: inline-block;
+              justify-content: left;
+            }
+            .bothbuttons {
+                justify-content: space-between;
+                display: inline-block; margin: 0 10px;
+                width: 70%;
+                margin-left: 5px;
+                margin-right: 5px;
+                text-align: left !important;
+
+            }
+            #text1 {
+              text-align: left;
+              margin-left: 35%;
+            }
+            #wordList {
+            margin-top: 20px; /* Abstand zwischen dem Schriftfeld und den Buttons */
+            font-size: 16px; /* Schriftgröße für das Schriftfeld */
+            text-align: center;
+      
+          }
+          #impressum-image {
+      max-width: 400px; /* Maximale Breite des Bildes */
+      display: block; /* Damit die margin: 0 auto; funktioniert */
+      margin: 0 auto; /* Zentrierung des Bildes */
+    }
+      
+            
+            @media screen and (max-width: 600px) {
+              body {
+                margin: 20px; /* Mehr Abstand zum Rand für Smartphones */
+              }
+              
+            }
+          </style>
+  </body>
+</html>
+
